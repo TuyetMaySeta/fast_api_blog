@@ -1,0 +1,26 @@
+version: "3.6"
+services:
+  api:
+    # in production we dont actually build the image
+    # we instead clone an image we deployed to dockerhub. The image name is
+    # the name of the repository at dockerhub
+    image: princekrampah/blogapi
+
+    # change 8000 to 80
+    ports: 
+      - 80:8000
+          
+
+    environment:
+      - MONGODB_URL="mongodb+srv://maybom29032004_db_user:K5Jhjknr124ZOXah@project1.yfwfznc.mongodb.net/fastapi_demo?retryWrites=true&w=majority&appName=Project1"
+      - MAIL_USERNAME=maybom29032004@gmail.com
+      - MAIL_PASSWORD=iloveyou044@
+      - MAIL_FROM=maybom29032004@gmail.com
+      - MAIL_PORT=587
+      - MAIL_SERVER=smtp.gmail.com
+      - MAIL_FROM_NAME="FLastAPI Blog"
+      - SECRET_KEY= supersecretkey123456   
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+    
