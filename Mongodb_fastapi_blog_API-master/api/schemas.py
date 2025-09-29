@@ -1,132 +1,44 @@
-# library imports
-import motor.motor_asyncio
-from pydantic import BaseModel, Field, EmailStr
-from pydantic import BaseModel
-from bson import ObjectId
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-import os
-from dotenv import load_dotenv
-
-# do not specify the '.env'
-load_dotenv()
-
-# pip install pydantic[email]
-# python -m pip install motor
-# python3 -m pip install "pymongo[srv]"
-
-# connect to mongodb
-client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv('MONGODB_URL'))
-
-# create the news_summary_users database
-db = client.news_summary_users
-
-
-# BSON and JSON compatibility addressed here
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid objectid")
-        return ObjectId(v)
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
-
+from datetime import datetime
 
 class User(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    name: str = Field(...)
-    email: EmailStr = Field(...)
-    password: str = Field(...)
-
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "name": "John Doe",
-                "email": "jdoe@example.com",
-                "password": "secret_code"
-            }
-        }
-
+    name: str
+    email: EmailStr
+    password: str
 
 class UserResponse(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    name: str = Field(...)
-    email: EmailStr = Field(...)
-
+    id: int
+    name: str
+    email: EmailStr
+    
     class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "name": "John Doe",
-                "email": "jdoe@example.com"
-            }
-        }
-
+        from_attributes = True
 
 class BlogContent(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    title: str = Field(...)
-    body: str = Field(...)
-
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "title": "blog title",
-                "body": "blog content"
-            }
-        }
-
+    title: str
+    body: str
 
 class BlogContentResponse(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    title: str = Field(...)
-    body: str = Field(...)
-    auther_name: str = Field(...)
-    auther_id: str = Field(...)
-    created_at: str = Field(...)
-
+    id: int
+    title: str
+    body: str
+    author_name: str
+    author_id: int
+    created_at: datetime
+    
     class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "title": "blog title",
-                "body": "blog content",
-                "auther_name": "name of the auther",
-                "auther_id": "ID of the auther",
-                "created_at": "Date of blog creation"
-            }
-        }
-
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-
 class TokenData(BaseModel):
-    id: Optional[str] = None
-
+    id: Optional[int] = None
 
 class PasswordResetRequest(BaseModel):
-    email: EmailStr = Field(...)
+    email: EmailStr
 
-class NewPassword(BaseModel):
-    password: str
-    
 class PasswordReset(BaseModel):
-    password: str = Field(...)
-
+    password: str

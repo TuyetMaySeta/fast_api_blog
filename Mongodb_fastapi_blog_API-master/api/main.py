@@ -1,14 +1,19 @@
-# library imports
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
-# module imports
-from .routes import blog_content, password_reset1,users, auth, password_reset
+from .database import init_db
+from .routes import blog_content, users, auth, password_reset1
 
-# initialize an app
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await init_db()
+    yield
+    # Shutdown (nếu cần)
 
-# Handle CORS protection
+app = FastAPI(lifespan=lifespan)
+
 origins = ["*"]
 
 app.add_middleware(
@@ -19,14 +24,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# register all the router endpoint
 app.include_router(blog_content.router)
 app.include_router(users.router)
 app.include_router(auth.router)
 app.include_router(password_reset1.router)
-app.include_router(password_reset.router)
-
 
 @app.get("/")
 def get():
