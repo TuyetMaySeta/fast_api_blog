@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: ems_postgres
+    container_name: blog_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ems
@@ -14,10 +12,34 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U blog_user -d blog_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ems"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  api:
+    build: .
+    container_name: blog_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:iloveyou044@postgres:5432/ems
+      SECRET_KEY: supersecretkey123456789abcdefghijklmnop
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      MAIL_USERNAME: maybom29032004@gmail.com
+      MAIL_PASSWORD: pogs uygw mpvs guru
+      MAIL_FROM: maybom29032004@gmail.com
+      MAIL_PORT: "587"
+      MAIL_SERVER: smtp.gmail.com
+      MAIL_FROM_NAME: FastAPI Blog
+    volumes:
+      - ./api:/app/api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:

@@ -1,42 +1,29 @@
-# Optimized multi-stage build
+# Stage 1: build dependencies
 FROM python:3.11-slim as builder
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /app
 
-# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc libpq-dev python3-dev \
+    gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies (cached layer)
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Production stage
+# Stage 2: final image
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    PATH="/home/appuser/.local/bin:$PATH"
+    PYTHONUNBUFFERED=1
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get autoremove -y
-
-# Create user and workspace
-RUN useradd -m -u 1000 appuser
 WORKDIR /app
 
-# Copy dependencies and code
-COPY --from=builder /root/.local /home/appuser/.local
-COPY --chown=appuser:appuser . .
+# Copy installed packages từ builder
+COPY --from=builder /install /usr/local
 
-USER appuser
+# Copy source code
+COPY . .
+
 EXPOSE 8000
-CMD ["python", "main.py"]
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
